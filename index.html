@@ -2,13 +2,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>System Design Quiz App</title>
-  <link rel="stylesheet" href="static/css/main.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Design Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .question-container {
+            margin-bottom: 20px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+        }
+    </style>
 </head>
 <body>
-  <div id="root">Loading...</div>
-  <script src="static/js/main.js"></script>
+    <h1>System Design Quiz</h1>
+    <div id="user-info">
+        <label for="username">Enter your name:</label>
+        <input type="text" id="username" placeholder="Your name">
+        <button onclick="startQuiz()">Start Quiz</button>
+    </div>
+    <div id="quiz-container" style="display: none;"></div>
+    <button id="submit-button" style="display: none;" onclick="submitQuiz()">Submit Quiz</button>
+    <div id="result"></div>
+
+    <script>
+        const quizData = [
+            {
+                question: "What is the main purpose of a load balancer in a distributed system?",
+                options: ["Distribute incoming network traffic", "Manage database replication", "Optimize network routing", "Monitor server performance"],
+                answer: "Distribute incoming network traffic"
+            },
+            {
+                question: "Which database type is best for hierarchical data storage?",
+                options: ["SQL", "NoSQL", "Graph Database", "Document Store"],
+                answer: "Graph Database"
+            },
+            {
+                question: "What is the key benefit of microservices architecture?",
+                options: ["Monolithic development", "Scalability and isolation", "Single point of failure", "Simpler deployment"],
+                answer: "Scalability and isolation"
+            },
+            {
+                question: "Which protocol is commonly used for secure data transfer?",
+                options: ["HTTP", "FTP", "HTTPS", "SMTP"],
+                answer: "HTTPS"
+            },
+            {
+                question: "What is a CDN primarily used for?",
+                options: ["Content Delivery", "Data Storage", "User Authentication", "Network Security"],
+                answer: "Content Delivery"
+            }
+        ];
+
+        let startTime;
+        let userName;
+
+        function startQuiz() {
+            userName = document.getElementById('username').value;
+            if (!userName) {
+                alert('Please enter your name to start the quiz.');
+                return;
+            }
+
+            startTime = new Date();
+            document.getElementById('user-info').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            document.getElementById('submit-button').style.display = 'block';
+            loadQuiz();
+        }
+
+        function loadQuiz() {
+            const quizContainer = document.getElementById('quiz-container');
+            quizContainer.innerHTML = ''; // Clear previous content if any
+            quizData.forEach((item, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question-container');
+                
+                const questionTitle = document.createElement('h3');
+                questionTitle.innerText = (index + 1) + '. ' + item.question;
+                questionDiv.appendChild(questionTitle);
+                
+                item.options.forEach(option => {
+                    const optionLabel = document.createElement('label');
+                    optionLabel.innerHTML = `<input type="radio" name="question${index}" value="${option}"> ${option}`;
+                    questionDiv.appendChild(optionLabel);
+                    questionDiv.appendChild(document.createElement('br'));
+                });
+
+                quizContainer.appendChild(questionDiv);
+            });
+        }
+
+        function submitQuiz() {
+            const endTime = new Date();
+            let score = 0;
+            quizData.forEach((item, index) => {
+                const selectedOption = document.querySelector(`input[name="question${index}"]:checked`);
+                if (selectedOption && selectedOption.value === item.answer) {
+                    score++;
+                }
+            });
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<h2>Your Score: ${score} out of ${quizData.length}</h2>`;
+
+            const timeTaken = (endTime - startTime) / 1000; // time in seconds
+            resultDiv.innerHTML += `<p>Time Taken: ${timeTaken} seconds</p>`;
+
+            // Send data to Google Sheets or backend server
+            sendDataToServer(userName, startTime, endTime, score, timeTaken);
+        }
+
+        function sendDataToServer(name, start, end, score, timeTaken) {
+            // Example using Google Sheets Web App URL (replace with your URL)
+            const scriptURL = 'YOUR_GOOGLE_SHEET_WEB_APP_URL'; // Update this line with your Google Sheets Web App URL
+            const data = new URLSearchParams();
+            data.append('name', name);
+            data.append('start_time', start);
+            data.append('end_time', end);
+            data.append('score', score);
+            data.append('time_taken', timeTaken);
+
+            fetch(scriptURL, { method: 'POST', body: data })
+                .then(response => console.log('Success!', response))
+                .catch(error => console.error('Error!', error.message));
+        }
+    </script>
 </body>
 </html>
